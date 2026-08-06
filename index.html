@@ -377,7 +377,7 @@ function renderTopicContentPages(t, i, lineColor, wrap){
   let part = 0;
   do{
     const pageKey = 'topic-'+i+'-'+part;
-    const label = part === 0 ? ('Conteúdo — ' + t.title) : ('Conteúdo — ' + t.title + ' (cont. ' + (part+1) + ')');
+    const label = part === 0 ? ('Conteúdo — ' + t.title) : ('Conteúdo — ' + t.title + ' (continuação)');
     wrap.appendChild(pageToolbar(label, pageKey));
 
     const cpage = document.createElement('div');
@@ -386,12 +386,12 @@ function renderTopicContentPages(t, i, lineColor, wrap){
     cpage.onclick = (e)=>{
       if(!e.target.closest('.inline-img-wrap')) selectPage(pageKey);
     };
-    const titleHtml = part === 0
-      ? escapeHtml(t.title)
-      : escapeHtml(t.title) + ' <span style="font-size:16px;font-weight:600;color:#8a8aa0;">(cont.)</span>';
-    cpage.innerHTML = `
-      <div class="content-title" contenteditable="true" data-bind="topic-title2-${i}-${part}">${titleHtml}</div>
+    const headerHtml = part === 0 ? `
+      <div class="content-title" contenteditable="true" data-bind="topic-title2-${i}-${part}">${escapeHtml(t.title)}</div>
       <div class="content-rule" style="background:${lineColor}"></div>
+    ` : '';
+    cpage.innerHTML = `
+      ${headerHtml}
       <div class="content-body" contenteditable="true" data-bind="topic-body-${i}-${part}">${remaining}</div>
       <div class="content-footer">${escapeHtml(doc.footerText)} — Relatório Final</div>
     `;
@@ -733,12 +733,29 @@ function classifyBlock(el){
     return { kind: lvl===1 ? 'h1' : (lvl<=3 ? 'sub' : 'normal') };
   }
   const { maxPt, bold } = inspectFormatting(el);
-  // exige negrito para contar como título — evita que texto grande porém normal
-  // (ex: citação ampliada) vire item de índice por engano
-  if(maxPt >= 24 && bold) return { kind:'doctitle' };
-  if(maxPt >= 18 && bold) return { kind:'h1' };
-  if(maxPt >= 13 && bold) return { kind:'sub' };
-  return { kind:'normal' };
+  const text = el.textContent.replace(/\u00a0/g,' ').trim();
+
+  // heading-like em formatação (negrito + fonte de título)?
+  const looksLikeHeading = bold && maxPt >= 13;
+  if(!looksLikeHeading){
+    if(maxPt >= 24 && bold) return { kind:'doctitle' };
+    return { kind:'normal' };
+  }
+
+  // se o texto começa com numeração tipo "3.", "3.6", "3.2.2", usa a
+  // profundidade dos números pra decidir o nível — é mais confiável do que
+  // só o tamanho da fonte, que pode variar de um documento pra outro
+  const numMatch = /^(\d+(?:\.\d+)*)\.?\s+/.exec(text);
+  if(numMatch){
+    const depth = numMatch[1].split('.').length;
+    if(depth === 1) return { kind:'h1' };
+    return { kind:'sub' };
+  }
+
+  // sem numeração: cai de volta pro tamanho da fonte
+  if(maxPt >= 24) return { kind:'doctitle' };
+  if(maxPt >= 18) return { kind:'h1' };
+  return { kind:'sub' };
 }
 
 // limpa um elemento: converte negrito/itálico/sublinhado de <span style=...> para tags semânticas
