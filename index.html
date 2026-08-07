@@ -114,6 +114,16 @@
   #imgToolbar button.del{background:#e05656;color:#fff;}
 
   .empty-hint{color:#aaa;font-style:italic;font-size:12.5px;}
+  .dash-mark{background:#fff2a8;border-radius:2px;box-shadow:0 0 0 1px #f0d94a;}
+  .btn-ghost.active-toggle{background:var(--navy);color:#fff;border-color:var(--navy);}
+  .page-limit-line{position:absolute;left:55px;right:55px;border-top:1.5px dashed #c7c7d6;pointer-events:none;z-index:5;}
+  .page-limit-line::after{content:'limite da página';position:absolute;right:0;top:-15px;font-size:8.5px;font-weight:700;letter-spacing:.03em;color:#9d9db0;background:#fff;padding:0 4px;}
+  #pageDeleteBtn{
+    position:absolute;display:none;width:36px;height:36px;border-radius:50%;
+    background:#e05656;color:#fff;font-size:16px;align-items:center;justify-content:center;
+    box-shadow:0 4px 12px rgba(0,0,0,.28);z-index:80;border:2px solid #fff;
+  }
+  #pageDeleteBtn:hover{background:#c93f3f;}
 
   /* ---------- MODAL IMPORTAR ---------- */
   #importOverlay{display:none;position:fixed;inset:0;background:rgba(10,10,25,.55);z-index:2000;align-items:center;justify-content:center;}
@@ -153,6 +163,8 @@
       <h3>Tópicos do relatório</h3>
       <div id="topicList"></div>
       <button class="btn-primary" onclick="addTopic()">+ Novo Tópico</button>
+      <button class="btn-ghost" style="margin-top:8px;" onclick="stripAllNumbering()">🧹 Remover numeração dos títulos</button>
+      <p class="hint" style="margin-top:6px;">Tira o "1.", "2)", "3 -" etc. do começo dos títulos importados, deixando só o texto (o número do índice continua aparecendo do lado, gerado automaticamente).</p>
     </div>
 
     <div class="side-section">
@@ -161,6 +173,19 @@
       <button class="btn-yellow" onclick="triggerImageUpload()">🖼 Inserir imagem na página selecionada</button>
       <input type="file" id="imgInput" accept="image/*" style="display:none" onchange="onImageSelected(event)">
       <div id="selectedPageLabel" style="font-size:11.5px;color:var(--gray);margin-top:8px;">Nenhuma página selecionada — clique em uma página de conteúdo à direita.</div>
+    </div>
+
+    <div class="side-section">
+      <h3>Revisão de texto</h3>
+      <button class="btn-ghost" id="dashBtn" onclick="toggleDashHighlight()">➖ Marcar travessões</button>
+      <p class="hint" style="margin-top:6px;">Destaca todos os "-", "–" e "—" do texto pra você achar rápido e revisar. Clique de novo pra limpar a marcação.</p>
+    </div>
+
+    <div class="side-section">
+      <h3>Paginação</h3>
+      <button class="btn-ghost" id="repagBtn" onclick="toggleAutoRepaginate()">🔓 Edição livre entre páginas</button>
+      <button class="btn-ghost" style="margin-top:6px;" onclick="forceRepaginate()">🔁 Repaginar agora</button>
+      <p class="hint" style="margin-top:6px;">Ligando a edição livre, você pode cortar e colar texto de uma página pra outra sem a ferramenta desfazer sozinha. A linha pontilhada no fim de cada página mostra até onde o texto cabe. Quando terminar, clique em "Repaginar agora" pra ela reorganizar tudo certinho de novo (ou deixe desligado se quiser controlar 100% na mão).</p>
     </div>
 
     <div class="side-section">
@@ -177,6 +202,7 @@
   </div>
 
   <div id="previewWrap"></div>
+  <button id="pageDeleteBtn" onclick="deletePage()" title="Excluir esta página">🗑</button>
 </div>
 
 <div id="importOverlay">
@@ -277,6 +303,78 @@ function moveTopic(i, dir){
   const tmp = doc.topics[i]; doc.topics[i]=doc.topics[j]; doc.topics[j]=tmp;
   render(); scheduleSave();
 }
+function stripNumberingText(title){
+  // remove padrões tipo "1.", "1)", "1 -", "01.", "1.2." no começo do título
+  return (title||'').replace(/^\s*(\d+[.\)]?\s*[-–—]?\s*)+/, '').trim();
+}
+function stripAllNumbering(){
+  doc.topics.forEach(t=>{ t.title = stripNumberingText(t.title); });
+  render(); scheduleSave();
+  document.getElementById('saveStatus').textContent = 'Numeração removida ✓';
+}
+
+/* ============================================================
+   MARCAR TRAVESSÕES / HÍFENS PARA REVISÃO
+   ============================================================ */
+let dashHighlightOn = false;
+let autoRepaginate = true;
+function toggleAutoRepaginate(){
+  autoRepaginate = !autoRepaginate;
+  const btn = document.getElementById('repagBtn');
+  if(autoRepaginate){
+    btn.textContent = '🔓 Edição livre entre páginas';
+    btn.classList.remove('active-toggle');
+  } else {
+    btn.textContent = '🔒 Edição livre ATIVADA (toque pra desligar)';
+    btn.classList.add('active-toggle');
+  }
+}
+function forceRepaginate(){
+  doc.topics.forEach((t,i)=> recombineTopicBody(i));
+  render();
+  scheduleSave();
+  document.getElementById('saveStatus').textContent = 'Repaginado ✓';
+}
+function toggleDashHighlight(){
+  dashHighlightOn = !dashHighlightOn;
+  const btn = document.getElementById('dashBtn');
+  if(dashHighlightOn){
+    document.querySelectorAll('.content-body').forEach(el=> highlightDashesIn(el));
+    btn.classList.add('active-toggle');
+    btn.textContent = '✅ Travessões marcados (clique p/ limpar)';
+  } else {
+    btn.classList.remove('active-toggle');
+    btn.textContent = '➖ Marcar travessões';
+    render(); // reconstrói as páginas a partir dos dados originais, removendo a marcação
+  }
+}
+function highlightDashesIn(root){
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode(node){
+      if(node.parentElement && node.parentElement.closest('.dash-mark')) return NodeFilter.FILTER_REJECT;
+      return /[-–—]/.test(node.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+    }
+  });
+  const nodes = [];
+  let n;
+  while(n = walker.nextNode()) nodes.push(n);
+  nodes.forEach(textNode=>{
+    const parts = textNode.nodeValue.split(/([-–—])/);
+    if(parts.length <= 1) return;
+    const frag = document.createDocumentFragment();
+    parts.forEach(part=>{
+      if(part === '-' || part === '–' || part === '—'){
+        const span = document.createElement('span');
+        span.className = 'dash-mark';
+        span.textContent = part;
+        frag.appendChild(span);
+      } else if(part){
+        frag.appendChild(document.createTextNode(part));
+      }
+    });
+    textNode.parentNode.replaceChild(frag, textNode);
+  });
+}
 function renderTopicList(){
   const list = document.getElementById('topicList');
   list.innerHTML = '';
@@ -368,6 +466,9 @@ function render(){
   });
 
   highlightSelectedPage();
+  if(dashHighlightOn){
+    document.querySelectorAll('.content-body').forEach(el=> highlightDashesIn(el));
+  }
 }
 
 // Cria a(s) página(s) de conteúdo de um tópico, quebrando automaticamente em
@@ -398,6 +499,7 @@ function renderTopicContentPages(t, i, lineColor, wrap){
     bindEditable(cpage, i);
     addPageNumber(cpage);
     wrap.appendChild(cpage);
+    addLimitLine(cpage);
 
     const bodyEl = cpage.querySelector('.content-body');
     attachImageHandlers(bodyEl, i);
@@ -412,37 +514,159 @@ function renderTopicContentPages(t, i, lineColor, wrap){
   } while(remaining);
 }
 
-// Mede o espaço disponível na página e, se o conteúdo não couber, move os
-// últimos blocos (parágrafos/listas) para fora, retornando o HTML que sobrou
-// (para virar a próxima página). Retorna null se tudo coube.
+// Desenha uma linha pontilhada mostrando até onde o texto cabe na página
+// (mesmo limite usado por splitOverflow), só como guia visual — some no PDF.
+// A margem de baixo é igual à margem de cima (60px), pra ficar simétrico.
+const PAGE_HEIGHT = 1123;
+const PAGE_BOTTOM_MARGIN = 60;
+function addLimitLine(cpage){
+  const topPx = PAGE_HEIGHT - PAGE_BOTTOM_MARGIN;
+  const line = document.createElement('div');
+  line.className = 'page-limit-line';
+  line.style.top = topPx + 'px';
+  cpage.appendChild(line);
+}
+
+// Mede o espaço disponível na página e, se o conteúdo não couber, corta o
+// parágrafo exatamente onde o espaço acaba (sem deixar vão em branco) e
+// devolve o restante do texto para virar a próxima página.
 function splitOverflow(pageEl, bodyEl){
-  const footerEl = pageEl.querySelector('.content-footer');
   const pageRect = pageEl.getBoundingClientRect();
   const bodyRect = bodyEl.getBoundingClientRect();
-  const footerRect = footerEl.getBoundingClientRect();
-  const maxBodyHeight = (footerRect.top - pageRect.top) - (bodyRect.top - pageRect.top) - 14;
+  const maxBodyHeight = (PAGE_HEIGHT - PAGE_BOTTOM_MARGIN) - (bodyRect.top - pageRect.top);
+  const maxBottomViewport = pageRect.top + (PAGE_HEIGHT - PAGE_BOTTOM_MARGIN);
 
   if(bodyEl.scrollHeight <= maxBodyHeight + 2) return null;
 
   const children = Array.from(bodyEl.children);
-  if(children.length <= 1) return null; // não dá pra dividir um bloco só, deixa transbordar
+  if(!children.length) return null;
 
   let splitAt = -1;
   for(let k=0; k<children.length; k++){
     const bottom = children[k].offsetTop + children[k].offsetHeight;
-    if(bottom > maxBodyHeight){
-      splitAt = k;
-      break;
-    }
+    if(bottom > maxBodyHeight){ splitAt = k; break; }
   }
-  if(splitAt <= 0) splitAt = Math.max(1, children.length - 1); // garante progresso
+  if(splitAt === -1) return null;
 
-  const overflowNodes = children.slice(splitAt);
-  if(!overflowNodes.length) return null;
+  const culprit = children[splitAt];
+  const isSplittable = culprit.nodeType === 1 &&
+    !culprit.classList.contains('inline-img-wrap') &&
+    !['UL','OL','TABLE','IMG'].includes(culprit.tagName) &&
+    !isHeadingTag(culprit); // título nunca é cortado no meio da frase
 
-  const overflowHtml = overflowNodes.map(n=> n.outerHTML).join('');
-  overflowNodes.forEach(n=> n.remove());
+  let restEl = isSplittable ? splitElementAtHeight(culprit, maxBottomViewport) : null;
+  const followingSiblings = children.slice(splitAt+1);
+
+  let overflowHtml;
+  if(restEl){
+    // o próprio parágrafo ficou parcialmente preenchido na página atual;
+    // o restante do texto + os blocos seguintes vão para a próxima página
+    overflowHtml = restEl.outerHTML + followingSiblings.map(n=> n.outerHTML).join('');
+    followingSiblings.forEach(n=> n.remove());
+  } else {
+    // não deu pra dividir esse bloco (título, lista, imagem, tabela, ou nada coube dele):
+    // move ele inteiro, junto com o que vem depois
+    if(splitAt === 0 && children.length === 1) return null; // evita loop infinito
+    const overflowNodes = children.slice(splitAt);
+    overflowHtml = overflowNodes.map(n=> n.outerHTML).join('');
+    overflowNodes.forEach(n=> n.remove());
+  }
+
+  // página nunca deve terminar com um título sozinho (sem nada de texto embaixo dele):
+  // se sobrou assim, o título também vai pra próxima página junto com o resto
+  let lastKept = bodyEl.lastElementChild;
+  while(lastKept && isHeadingTag(lastKept) && bodyEl.children.length > 1){
+    bodyEl.removeChild(lastKept);
+    overflowHtml = lastKept.outerHTML + overflowHtml;
+    lastKept = bodyEl.lastElementChild;
+  }
+
   return overflowHtml;
+}
+
+function isHeadingTag(el){
+  return !!(el && el.tagName && /^H[1-6]$/.test(el.tagName));
+}
+
+// Acha até que ponto (em caracteres) do texto de um elemento cabe antes de
+// "maxBottom" (coordenada de viewport), usando Range para medir com precisão
+// de linha, sem precisar mutar o DOM durante a busca.
+function findCutOffset(elem, maxBottom){
+  const walker = document.createTreeWalker(elem, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  let acc = 0, node;
+  while(node = walker.nextNode()){
+    nodes.push({ node, start: acc, len: node.nodeValue.length });
+    acc += node.nodeValue.length;
+  }
+  const totalLen = acc;
+  if(totalLen === 0) return null;
+
+  function rectBottomAt(offset){
+    let target=null, localOffset=0;
+    for(const n of nodes){
+      if(offset <= n.start + n.len){ target=n.node; localOffset=Math.max(0, Math.min(offset-n.start, n.len)); break; }
+    }
+    if(!target){ const last=nodes[nodes.length-1]; target=last.node; localOffset=last.len; }
+    const lo = Math.max(0, localOffset-1);
+    const hi = Math.max(lo+1, Math.min(localOffset, target.nodeValue.length));
+    try{
+      const r = document.createRange();
+      r.setStart(target, lo);
+      r.setEnd(target, hi);
+      const rects = r.getClientRects();
+      if(rects.length) return rects[rects.length-1].bottom;
+    }catch(e){}
+    return null;
+  }
+
+  let lo=0, hi=totalLen, best=0;
+  for(let iter=0; iter<24 && lo<=hi; iter++){
+    const mid = Math.floor((lo+hi)/2);
+    const b = rectBottomAt(mid);
+    if(b===null){ hi = mid-1; continue; }
+    if(b <= maxBottom){ best=mid; lo=mid+1; } else { hi=mid-1; }
+  }
+  return { offset: best, totalLen, nodes };
+}
+
+// Divide um elemento (parágrafo, item de lista, título...) exatamente no
+// ponto em que o espaço acaba, ajustando pro fim da palavra mais próxima.
+// Retorna um novo elemento com o "resto" do texto (pra próxima página), ou
+// null se nada coube / tudo coube (não precisa dividir).
+function splitElementAtHeight(elem, maxBottom){
+  const found = findCutOffset(elem, maxBottom);
+  if(!found) return null;
+  const { offset: cut, totalLen, nodes } = found;
+  if(cut <= 0 || cut >= totalLen) return null;
+
+  const fullText = elem.textContent;
+  let adjusted = cut;
+  while(adjusted > 0 && adjusted < fullText.length && !/\s/.test(fullText[adjusted])) adjusted--;
+  if(adjusted <= 0) adjusted = cut; // palavra única enorme: corta mesmo assim
+
+  let target=null, localOffset=0;
+  for(const n of nodes){
+    if(adjusted <= n.start + n.len){ target=n.node; localOffset=Math.max(0, adjusted-n.start); break; }
+  }
+  if(!target) return null;
+
+  try{
+    const range = document.createRange();
+    range.setStart(target, localOffset);
+    range.setEndAfter(elem.lastChild || elem);
+    const restFrag = range.extractContents();
+    if(!restFrag || !restFrag.textContent.trim()) return null;
+
+    const restEl = document.createElement(elem.tagName);
+    Array.from(elem.attributes).forEach(attr=>{
+      if(attr.name !== 'id') restEl.setAttribute(attr.name, attr.value);
+    });
+    restEl.appendChild(restFrag);
+    return restEl;
+  }catch(e){
+    return null;
+  }
 }
 
 // Junta o conteúdo de todas as páginas (partes) de um tópico de volta em um único bodyHtml.
@@ -462,6 +686,7 @@ function recombineTopicBody(i){
 // (pode ter passado a caber em menos páginas, ou passado a precisar de mais).
 let repaginateTimeout = null;
 function scheduleRepagination(){
+  if(!autoRepaginate) return; // edição livre: não reorganiza sozinho
   clearTimeout(repaginateTimeout);
   repaginateTimeout = setTimeout(()=>{
     const wrap = document.getElementById('previewWrap');
@@ -522,6 +747,56 @@ function highlightSelectedPage(){
   document.querySelectorAll('.content-page').forEach(p=>{
     p.style.outline = (p.dataset.pageKey === selectedPageKey) ? '3px solid #5b8def' : 'none';
   });
+  positionPageDeleteBtn();
+}
+function positionPageDeleteBtn(){
+  const btn = document.getElementById('pageDeleteBtn');
+  if(!selectedPageKey){ btn.style.display='none'; return; }
+  const pageEl = document.querySelector(`.content-page[data-page-key="${selectedPageKey}"]`);
+  if(!pageEl){ btn.style.display='none'; return; }
+  const r = pageEl.getBoundingClientRect();
+  btn.style.left = (window.scrollX + r.right - 48) + 'px';
+  btn.style.top = (window.scrollY + r.top + 14) + 'px';
+  btn.style.display = 'flex';
+}
+document.getElementById('previewWrap').addEventListener('scroll', ()=>{ if(selectedPageKey) positionPageDeleteBtn(); });
+window.addEventListener('resize', ()=>{ if(selectedPageKey) positionPageDeleteBtn(); });
+
+function deletePage(){
+  if(!selectedPageKey){ alert('Clique em uma página de conteúdo (à direita) pra selecioná-la primeiro.'); return; }
+  const segs = selectedPageKey.split('-');
+  const i = parseInt(segs[1]);
+  if(isNaN(i) || !doc.topics[i]) return;
+
+  const topicPages = Array.from(document.querySelectorAll('.content-page'))
+    .filter(p => p.dataset.pageKey && p.dataset.pageKey.startsWith(`topic-${i}-`));
+
+  if(topicPages.length <= 1){
+    if(!confirm('Esta é a única página de conteúdo deste tópico — excluir ela remove o tópico inteiro (capa + conteúdo). Continuar?')) return;
+    removeTopic(i);
+    selectedPageKey = null;
+    document.getElementById('selectedPageLabel').textContent = 'Nenhuma página selecionada — clique em uma página de conteúdo à direita.';
+    document.getElementById('pageDeleteBtn').style.display = 'none';
+    return;
+  }
+
+  if(!confirm('Excluir esta página? O texto que estiver nela será perdido (o restante do tópico é reorganizado automaticamente).')) return;
+
+  const remainingParts = topicPages
+    .filter(p => p.dataset.pageKey !== selectedPageKey)
+    .sort((a,b)=>{
+      const pa = parseInt(a.dataset.pageKey.split('-').pop());
+      const pb = parseInt(b.dataset.pageKey.split('-').pop());
+      return pa - pb;
+    });
+
+  doc.topics[i].bodyHtml = remainingParts.map(p => p.querySelector('.content-body').innerHTML).join('');
+
+  selectedPageKey = null;
+  document.getElementById('selectedPageLabel').textContent = 'Nenhuma página selecionada — clique em uma página de conteúdo à direita.';
+  render();
+  scheduleSave();
+  document.getElementById('saveStatus').textContent = 'Página excluída ✓';
 }
 
 /* ============================================================
@@ -683,6 +958,8 @@ async function exportPDF(){
   document.querySelectorAll('.rh').forEach(el=> el.style.visibility='hidden');
   document.querySelectorAll('.inline-img-wrap').forEach(el=> el.classList.remove('selected','moving'));
   document.querySelectorAll('.content-page').forEach(el=> el.style.outline='none');
+  document.querySelectorAll('.page-limit-line').forEach(el=> el.style.display='none');
+  document.getElementById('pageDeleteBtn').style.display='none';
   document.getElementById('imgToolbar').style.display='none';
 
   for(let i=0;i<pages.length;i++){
@@ -693,6 +970,7 @@ async function exportPDF(){
   }
 
   document.querySelectorAll('.rh').forEach(el=> el.style.visibility='');
+  document.querySelectorAll('.page-limit-line').forEach(el=> el.style.display='');
   highlightSelectedPage();
 
   const fname = (doc.title.replace(/<[^>]+>/g,' ').trim() || 'relatorio');
@@ -857,6 +1135,11 @@ function processImport(){
    INIT
    ============================================================ */
 loadDoc();
+// Depois que a fonte Montserrat termina de carregar, as medidas de altura do
+// texto podem mudar — refaz a paginação pra não sobrar (nem faltar) espaço.
+if(document.fonts && document.fonts.ready){
+  document.fonts.ready.then(()=>{ render(); });
+}
 </script>
 </body>
 </html>
