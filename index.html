@@ -84,10 +84,38 @@
   .content-page{padding:60px 55px;overflow:hidden;}
   .content-title{font-size:38px;font-weight:800;color:var(--navy);margin:0;outline:none;text-transform:uppercase;}
   .content-rule{width:100%;height:4px;margin:10px 0 24px;border-radius:2px;}
-  .content-body{font-size:12px;line-height:1.7;color:#2a2a38;outline:none;min-height:200px;text-align:justify;}
+  .content-body{font-size:17px;line-height:1.65;color:#2a2a38;outline:none;min-height:200px;text-align:justify;}
   .content-body::after{content:"";display:block;clear:both;}
   .content-body b, .content-body strong{color:var(--navy);}
   .content-footer{position:absolute;bottom:24px;left:55px;right:55px;text-align:center;font-size:10px;font-weight:700;color:var(--navy);}
+
+  /* ---------- TABELAS IMPORTADAS ---------- */
+  .content-body table.report-table{
+    width:100%;border-collapse:separate;border-spacing:0;margin:12px 0 16px;
+    font-size:14.5px;table-layout:fixed;border-radius:6px;overflow:hidden;
+    border:1px solid #d6d6e4;box-shadow:0 1px 3px rgba(18,22,63,.08);
+  }
+  .content-body table.report-table td, .content-body table.report-table th{
+    border-bottom:1px solid #e4e4ee;border-right:1px solid #e4e4ee;
+    padding:8px 10px;vertical-align:top;text-align:left;word-wrap:break-word;
+    line-height:1.4;color:#2a2a38;
+  }
+  .content-body table.report-table td:last-child,
+  .content-body table.report-table th:last-child{border-right:none;}
+  .content-body table.report-table tr:last-child td{border-bottom:none;}
+  .content-body table.report-table tr.hdr-row td,
+  .content-body table.report-table tr.hdr-row th{
+    background:var(--navy);color:#fff;font-weight:700;font-size:14px;
+    text-transform:uppercase;letter-spacing:.02em;border-right:1px solid rgba(255,255,255,.15);
+    border-bottom:none;
+  }
+  .content-body table.report-table tr.hdr-row td:first-child,
+  .content-body table.report-table tr.hdr-row th:first-child{border-top-left-radius:5px;}
+  .content-body table.report-table tr.hdr-row td:last-child,
+  .content-body table.report-table tr.hdr-row th:last-child{border-top-right-radius:5px;border-right:none;}
+  .content-body table.report-table tr:nth-child(even):not(.hdr-row) td{background:#f6f6fb;}
+  .content-body table.report-table tr:nth-child(odd):not(.hdr-row) td{background:#fff;}
+  .content-body table.report-table tr:not(.hdr-row) td:first-child{font-weight:600;color:var(--navy);}
 
   /* ---------- IMAGENS QUE INTERAGEM COM O TEXTO ---------- */
   .inline-img-wrap{position:relative;display:inline-block;width:260px;margin:6px;vertical-align:top;}
@@ -112,6 +140,17 @@
   #imgToolbar button{background:#fff;color:var(--navy);font-size:11px;padding:5px 8px;border-radius:5px;}
   #imgToolbar button.active{background:var(--yellow);}
   #imgToolbar button.del{background:#e05656;color:#fff;}
+
+  /* marcador de quebra manual de página: nunca aparece de fato — é retirado
+     e vira o corte entre uma página e a próxima assim que a paginação roda */
+  .manual-pagebreak{ display:none; }
+
+  #tableToolbar{
+    position:absolute;display:none;background:var(--navy);border-radius:8px;padding:6px;
+    box-shadow:0 6px 18px rgba(0,0,0,.3);gap:4px;z-index:999;
+  }
+  #tableToolbar button{background:#e05656;color:#fff;font-size:11.5px;padding:6px 10px;border-radius:5px;white-space:nowrap;}
+  table.report-table.selected{outline:2px solid var(--yellow);outline-offset:1px;}
 
   .empty-hint{color:#aaa;font-style:italic;font-size:12.5px;}
   .dash-mark{background:#fff2a8;border-radius:2px;box-shadow:0 0 0 1px #f0d94a;}
@@ -140,6 +179,22 @@
   #importActions{display:flex;gap:10px;justify-content:flex-end;padding:16px 22px;border-top:1px solid #eee;margin-top:14px;}
   #importActions button{padding:9px 16px;}
 
+  /* ---------- MODAL GERAR TABELA ---------- */
+  #tableGenOverlay{display:none;position:fixed;inset:0;background:rgba(10,10,25,.55);z-index:2000;align-items:center;justify-content:center;}
+  #tableGenOverlay.open{display:flex;}
+  #tableGenModal{background:#fff;border-radius:10px;width:640px;max-width:92vw;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.35);}
+  #tableGenModal h2{font-size:16px;margin:0;padding:18px 22px 4px;color:var(--navy);}
+  #tableGenModal .import-steps{font-size:12px;color:var(--gray);line-height:1.6;padding:0 22px 10px;margin:0;}
+  #tableGenBody{padding:0 22px 6px;overflow-y:auto;}
+  .tablegen-label{display:block;font-size:11.5px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.03em;margin:12px 0 6px;}
+  #tableGenText{width:100%;min-height:100px;max-height:22vh;border:2px dashed #c9c9dc;border-radius:8px;padding:10px;font-size:12.5px;font-family:'Montserrat',Arial,sans-serif;resize:vertical;background:#fafafc;box-sizing:border-box;}
+  #tableGenMode, #tableGenDelim{font-size:12.5px;padding:6px 8px;border:1px solid #cfcfe0;border-radius:6px;background:#fff;width:100%;}
+  .tablegen-row{display:flex;align-items:center;gap:8px;margin-top:8px;}
+  .tablegen-row input[type=number], .tablegen-row input[type=text]{font-size:12.5px;padding:6px 8px;border:1px solid #cfcfe0;border-radius:6px;}
+  #tableGenPreview{border:1px solid #e0e0ea;border-radius:8px;padding:10px;max-height:26vh;overflow:auto;background:#f4f4f8;}
+  #tableGenPreview .empty-hint{font-size:12px;}
+  #tableGenPreview table.report-table{font-size:10.5px;box-shadow:none;}
+
   /* ---------- NUMERAÇÃO DE PÁGINA ---------- */
   .page-number{position:absolute;right:30px;bottom:24px;font-size:11px;font-weight:700;letter-spacing:.03em;}
   .page-number.pn-dark{color:var(--navy);}
@@ -164,6 +219,7 @@
       <div id="topicList"></div>
       <button class="btn-primary" onclick="addTopic()">+ Novo Tópico</button>
       <button class="btn-ghost" style="margin-top:8px;" onclick="stripAllNumbering()">🧹 Remover numeração dos títulos</button>
+      <button class="btn-ghost" style="margin-top:8px;" onclick="fixOldSubheadings()">🔧 Corrigir tamanho de subtítulos antigos</button>
       <p class="hint" style="margin-top:6px;">Tira o "1.", "2)", "3 -" etc. do começo dos títulos importados, deixando só o texto (o número do índice continua aparecendo do lado, gerado automaticamente).</p>
     </div>
 
@@ -182,7 +238,17 @@
     </div>
 
     <div class="side-section">
+      <h3>Tabelas</h3>
+      <p class="hint" style="margin-bottom:8px;">Selecione a página de conteúdo abaixo, copie a tabela pronta do Excel/Google Sheets (Ctrl+C) e cole direto na caixa que abrir. É o jeito mais confiável — não depende de "adivinhar" onde cada célula termina.</p>
+      <button class="btn-yellow" onclick="startTableGenFromPaste()">📥 Colar tabela do Excel/Sheets</button>
+      <p class="hint" style="margin:10px 0 8px;">Ou, se o texto já está no relatório e só perdeu a formatação de tabela, selecione o trecho no documento à direita e use:</p>
+      <button class="btn-ghost" onclick="startTableGenFromSelection()">🔲 Criar tabela da seleção</button>
+    </div>
+
+    <div class="side-section">
       <h3>Paginação</h3>
+      <button class="btn-yellow" onclick="addManualPageBreak()">➕ Adicionar página em branco</button>
+      <p class="hint" style="margin:6px 0 10px;">Clique numa página de conteúdo à direita pra selecioná-la e depois use o botão acima — uma página nova e em branco entra logo depois dela, pronta pra você escrever.</p>
       <button class="btn-ghost" id="repagBtn" onclick="toggleAutoRepaginate()">🔓 Edição livre entre páginas</button>
       <button class="btn-ghost" style="margin-top:6px;" onclick="forceRepaginate()">🔁 Repaginar agora</button>
       <p class="hint" style="margin-top:6px;">Ligando a edição livre, você pode cortar e colar texto de uma página pra outra sem a ferramenta desfazer sozinha. A linha pontilhada no fim de cada página mostra até onde o texto cabe. Quando terminar, clique em "Repaginar agora" pra ela reorganizar tudo certinho de novo (ou deixe desligado se quiser controlar 100% na mão).</p>
@@ -190,7 +256,8 @@
 
     <div class="side-section">
       <h3>Exportar</h3>
-      <button class="btn-primary" onclick="exportPDF()">⬇ Exportar PDF</button>
+      <button class="btn-primary" onclick="exportPDF()">⬇ Exportar PDF (documento completo)</button>
+      <button class="btn-ghost" style="margin-top:8px;" onclick="exportSelectedPagePDF()">⬇ Exportar PDF (só a página selecionada)</button>
       <p class="hint" style="margin-top:8px;">No Google Slides: <b>Arquivo → Importar slides</b>. No Canva: <b>Importar → PDF</b>.</p>
     </div>
 
@@ -222,6 +289,54 @@
   </div>
 </div>
 
+<div id="tableGenOverlay">
+  <div id="tableGenModal">
+    <h2 id="tableGenTitle">Criar tabela a partir do texto selecionado</h2>
+    <p class="import-steps" id="tableGenSteps">
+      Ajuste abaixo como o texto selecionado deve ser dividido em linhas e colunas. A prévia atualiza automaticamente.
+    </p>
+    <div id="tableGenBody">
+      <label class="tablegen-label">Texto selecionado (pode editar antes de gerar)</label>
+      <textarea id="tableGenText" placeholder="Cole aqui (Ctrl+V) o conteúdo copiado do Excel ou Google Sheets..." oninput="onTableGenTextInput(event)"></textarea>
+
+      <label class="tablegen-label">Como as colunas estão organizadas?</label>
+      <select id="tableGenMode" onchange="updateTableGenModeUI()">
+        <option value="fixed">Cada linha do texto é uma célula — X colunas por linha</option>
+        <option value="delim">Cada linha do texto é uma linha da tabela, colunas separadas por um símbolo</option>
+      </select>
+
+      <div id="tableGenFixedRow" class="tablegen-row">
+        <label class="tablegen-label" style="margin:0;">Número de colunas:</label>
+        <input type="number" id="tableGenColCount" value="3" min="1" max="20" oninput="renderTableGenPreview()">
+      </div>
+
+      <div id="tableGenDelimRow" class="tablegen-row" style="display:none;">
+        <label class="tablegen-label" style="margin:0;">Separador:</label>
+        <select id="tableGenDelim" onchange="updateTableGenDelimUI()">
+          <option value="tab">Tabulação</option>
+          <option value="comma">Vírgula ( , )</option>
+          <option value="semicolon">Ponto e vírgula ( ; )</option>
+          <option value="slash">Barra ( / )</option>
+          <option value="custom">Outro símbolo...</option>
+        </select>
+        <input type="text" id="tableGenCustomDelim" placeholder="símbolo" maxlength="3" style="display:none;width:60px;" oninput="renderTableGenPreview()">
+      </div>
+
+      <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;margin-top:10px;">
+        <input type="checkbox" id="tableGenHeader" checked onchange="renderTableGenPreview()">
+        Primeira linha é o cabeçalho da tabela
+      </label>
+
+      <label class="tablegen-label">Prévia</label>
+      <div id="tableGenPreview"></div>
+    </div>
+    <div id="importActions">
+      <button class="btn-ghost" onclick="closeTableGenModal()">Cancelar</button>
+      <button class="btn-primary" onclick="insertGeneratedTable()">Inserir tabela</button>
+    </div>
+  </div>
+</div>
+
 <div id="imgToolbar">
   <button onclick="setImgFloat('float-left')" title="Texto contorna pela direita">⇤ Esquerda</button>
   <button onclick="setImgFloat('float-right')" title="Texto contorna pela esquerda">Direita ⇥</button>
@@ -229,6 +344,10 @@
   <button onclick="resizeImg(-40)">−</button>
   <button onclick="resizeImg(40)">+</button>
   <button class="del" onclick="deleteImg()">🗑</button>
+</div>
+
+<div id="tableToolbar">
+  <button onclick="deleteTable()">🗑 Excluir tabela</button>
 </div>
 
 <script>
@@ -311,6 +430,21 @@ function stripAllNumbering(){
   doc.topics.forEach(t=>{ t.title = stripNumberingText(t.title); });
   render(); scheduleSave();
   document.getElementById('saveStatus').textContent = 'Numeração removida ✓';
+}
+function fixOldSubheadings(){
+  let changed = false;
+  doc.topics.forEach(t=>{
+    if(t.bodyHtml && t.bodyHtml.indexOf('font-size:14px') !== -1){
+      t.bodyHtml = t.bodyHtml.replace(/font-size:\s*14px;\s*margin:\s*16px 0 6px/g, 'font-size:19px;margin:18px 0 8px');
+      changed = true;
+    }
+  });
+  if(changed){
+    render(); scheduleSave();
+    document.getElementById('saveStatus').textContent = 'Subtítulos corrigidos ✓';
+  } else {
+    document.getElementById('saveStatus').textContent = 'Nenhum subtítulo antigo encontrado.';
+  }
 }
 
 /* ============================================================
@@ -476,7 +610,12 @@ function render(){
 function renderTopicContentPages(t, i, lineColor, wrap){
   let remaining = t.bodyHtml;
   let part = 0;
+  const MAX_PARTS = 400; // trava de segurança: nunca deixa um tópico gerar páginas sem fim
   do{
+    if(part >= MAX_PARTS){
+      console.warn('Paginação interrompida por segurança no tópico "'+t.title+'" — conteúdo excedeu '+MAX_PARTS+' páginas.');
+      break;
+    }
     const pageKey = 'topic-'+i+'-'+part;
     const label = part === 0 ? ('Conteúdo — ' + t.title) : ('Conteúdo — ' + t.title + ' (continuação)');
     wrap.appendChild(pageToolbar(label, pageKey));
@@ -503,15 +642,38 @@ function renderTopicContentPages(t, i, lineColor, wrap){
 
     const bodyEl = cpage.querySelector('.content-body');
     attachImageHandlers(bodyEl, i);
+    attachTableHandlers(bodyEl, i);
 
     const overflow = splitOverflow(cpage, bodyEl);
-    if(overflow){
-      remaining = overflow;
+    const finalOverflow = (overflow !== null) ? overflow : extractManualBreak(bodyEl);
+    if(finalOverflow !== null){
+      remaining = finalOverflow;
       part++;
     } else {
       remaining = null;
     }
-  } while(remaining);
+  } while(remaining !== null);
+}
+
+// Procura um marcador de "quebra manual de página" (inserido pelo botão
+// "Adicionar página em branco") entre os filhos diretos do corpo da página.
+// Se achar, força o corte ali mesmo — não importa se ainda cabia mais
+// conteúdo nessa página — e devolve o que vem depois dele (pode ser uma
+// string vazia, se o marcador for o último filho: isso força uma página
+// totalmente em branco a seguir, de propósito). Devolve null se não há
+// marcador (nesse caso, quem chamou deve cair na paginação normal por
+// estouro de espaço).
+function extractManualBreak(bodyEl){
+  const marker = Array.from(bodyEl.children).find(el=> el.classList && el.classList.contains('manual-pagebreak'));
+  if(!marker) return null;
+  const following = [];
+  let n = marker.nextSibling;
+  while(n){ following.push(n); n = n.nextSibling; }
+  marker.remove();
+  if(!following.length) return '';
+  const html = following.map(node=> node.nodeType===1 ? node.outerHTML : (node.textContent||'')).join('');
+  following.forEach(node=> node.remove());
+  return html;
 }
 
 // Desenha uma linha pontilhada mostrando até onde o texto cabe na página
@@ -543,30 +705,46 @@ function splitOverflow(pageEl, bodyEl){
 
   let splitAt = -1;
   for(let k=0; k<children.length; k++){
-    const bottom = children[k].offsetTop + children[k].offsetHeight;
-    if(bottom > maxBodyHeight){ splitAt = k; break; }
+    // Usa getBoundingClientRect (igual ao findCutOffset lá embaixo) em vez de
+    // offsetTop/offsetHeight: são dois jeitos de medir "onde termina o
+    // elemento" que normalmente concordam, mas nos limites exatos da página
+    // podem divergir por 1-2px de arredondamento — e se divergirem, esse
+    // primeiro filho pode ser marcado como "não cabe" mesmo cabendo de
+    // verdade, fazendo o corte parar cedo demais (com risco até de nunca
+    // detectar um estouro real que vem de um filho mais adiante).
+    const bottom = children[k].getBoundingClientRect().bottom;
+    if(bottom > maxBottomViewport + 1){ splitAt = k; break; }
   }
   if(splitAt === -1) return null;
 
   const culprit = children[splitAt];
+  const isTable = culprit.nodeType === 1 && culprit.tagName === 'TABLE';
   const isSplittable = culprit.nodeType === 1 &&
     !culprit.classList.contains('inline-img-wrap') &&
-    !['UL','OL','TABLE','IMG'].includes(culprit.tagName) &&
+    !['UL','OL','IMG'].includes(culprit.tagName) &&
+    !isTable && // tabela usa a divisão por linha (splitTableAtHeight) abaixo, não a de texto
     !isHeadingTag(culprit); // título nunca é cortado no meio da frase
 
-  let restEl = isSplittable ? splitElementAtHeight(culprit, maxBottomViewport) : null;
+  let restEl = isSplittable ? splitElementAtHeight(culprit, maxBottomViewport)
+              : isTable ? splitTableAtHeight(culprit, maxBottomViewport)
+              : null;
   const followingSiblings = children.slice(splitAt+1);
 
   let overflowHtml;
   if(restEl){
-    // o próprio parágrafo ficou parcialmente preenchido na página atual;
+    // o próprio parágrafo/tabela ficou parcialmente preenchido na página atual;
     // o restante do texto + os blocos seguintes vão para a próxima página
     overflowHtml = restEl.outerHTML + followingSiblings.map(n=> n.outerHTML).join('');
     followingSiblings.forEach(n=> n.remove());
   } else {
-    // não deu pra dividir esse bloco (título, lista, imagem, tabela, ou nada coube dele):
-    // move ele inteiro, junto com o que vem depois
-    if(splitAt === 0 && children.length === 1) return null; // evita loop infinito
+    // não deu pra dividir esse bloco (título, lista, imagem, ou nada coube dele
+    // — inclusive uma tabela que nem por linha coube nenhuma vez):
+    // move ele inteiro, junto com o que vem depois.
+    // Se é o primeiro filho (splitAt === 0), significa que ele sozinho já é
+    // maior que uma página inteira em branco: adiar pra próxima página não
+    // resolveria nada (ela também começa em branco) e geraria páginas vazias
+    // sem fim. Nesse caso aceitamos o "vazamento" visual e paramos de dividir.
+    if(splitAt === 0) return null; // evita loop infinito
     const overflowNodes = children.slice(splitAt);
     overflowHtml = overflowNodes.map(n=> n.outerHTML).join('');
     overflowNodes.forEach(n=> n.remove());
@@ -667,6 +845,48 @@ function splitElementAtHeight(elem, maxBottom){
   }catch(e){
     return null;
   }
+}
+
+// Divide uma tabela por linha, igual a splitElementAtHeight faz com parágrafos:
+// mantém na página atual as linhas (<tr>) que cabem antes de "maxBottom" e
+// devolve uma nova tabela (mesma classe/cabeçalho repetido) com o restante das
+// linhas, para a próxima página. Retorna null se nenhuma linha coube (a
+// própria tabela não muda) ou se todas as linhas couberam (nada a dividir).
+function splitTableAtHeight(table, maxBottom){
+  const rows = Array.from(table.querySelectorAll('tr'));
+  if(rows.length <= 1) return null; // sem linhas suficientes pra dividir (ex.: só cabeçalho)
+
+  let cutIndex = -1;
+  for(let k=0; k<rows.length; k++){
+    const rect = rows[k].getBoundingClientRect();
+    if(rect.bottom <= maxBottom) cutIndex = k; else break;
+  }
+  // sempre mantém a linha de cabeçalho (índice 0) na página atual, mesmo que
+  // ela sozinha não coubesse — evita perder o cabeçalho da tabela
+  if(cutIndex < 0) cutIndex = 0;
+  if(cutIndex >= rows.length - 1) return null; // tudo coube, nada a dividir
+
+  const hasHeaderRow = rows[0].classList.contains('hdr-row');
+  const keepRows = rows.slice(0, cutIndex + 1);
+  const restRows = rows.slice(cutIndex + 1);
+  if(!restRows.length) return null;
+
+  // se a linha de cabeçalho não estiver entre as mantidas (cutIndex===0 e ela
+  // não coube), garante que pelo menos ela permaneça mantida para não sumir
+  if(hasHeaderRow && keepRows.indexOf(rows[0]) === -1) keepRows.unshift(rows[0]);
+
+  // remove da tabela atual as linhas que vão para a próxima página
+  restRows.forEach(r=> r.remove());
+
+  // monta a tabela "resto" pra próxima página, repetindo a linha de cabeçalho
+  // (se houver) pra manter a leitura clara
+  const restTable = document.createElement('table');
+  restTable.className = table.className;
+  const tbody = document.createElement('tbody');
+  if(hasHeaderRow) tbody.appendChild(rows[0].cloneNode(true));
+  restRows.forEach(r=> tbody.appendChild(r));
+  restTable.appendChild(tbody);
+  return restTable;
 }
 
 // Junta o conteúdo de todas as páginas (partes) de um tópico de volta em um único bodyHtml.
@@ -816,6 +1036,7 @@ function onImageSelected(e){
     if(!bodyEl) return;
     const wrapHtml = `<span class="inline-img-wrap float-right" contenteditable="false" style="width:260px;"><img src="${ev.target.result}"><span class="rh"></span></span>`;
     bodyEl.insertAdjacentHTML('beforeend', wrapHtml);
+    ensureLandingParagraphAfter(bodyEl.lastElementChild, bodyEl);
     recombineTopicBody(idx);
     attachImageHandlers(bodyEl, idx);
     scheduleSave();
@@ -947,6 +1168,80 @@ function syncBody(topicIdx){
 }
 
 /* ============================================================
+   EXCLUIR TABELA
+   ============================================================ */
+let selectedTableEl = null; // { el, topicIdx }
+
+function attachTableHandlers(bodyEl, topicIdx){
+  if(!bodyEl || bodyEl.dataset.tableHandlersBound) return;
+  bodyEl.dataset.tableHandlersBound = '1';
+  // clicar em qualquer lugar de dentro da tabela a seleciona (sem atrapalhar
+  // o clique normal pra editar o texto de uma célula — o cursor continua
+  // sendo posicionado normalmente, só aparece a barrinha de excluir)
+  bodyEl.addEventListener('click', (e)=>{
+    const table = e.target.closest('table.report-table');
+    if(table) selectTable(table, topicIdx);
+  });
+}
+function selectTable(table, topicIdx){
+  document.querySelectorAll('table.report-table.selected').forEach(t=> t.classList.remove('selected'));
+  table.classList.add('selected');
+  selectedTableEl = { el: table, topicIdx };
+  positionTableToolbar(table);
+  document.getElementById('tableToolbar').style.display = 'flex';
+}
+function positionTableToolbar(table){
+  const bar = document.getElementById('tableToolbar');
+  const r = table.getBoundingClientRect();
+  bar.style.left = (window.scrollX + r.left) + 'px';
+  bar.style.top = (window.scrollY + r.top - 40) + 'px';
+}
+document.addEventListener('click', (e)=>{
+  if(!e.target.closest('table.report-table') && !e.target.closest('#tableToolbar')){
+    document.querySelectorAll('table.report-table.selected').forEach(t=> t.classList.remove('selected'));
+    document.getElementById('tableToolbar').style.display = 'none';
+    selectedTableEl = null;
+  }
+});
+document.getElementById('previewWrap').addEventListener('scroll', ()=>{ if(selectedTableEl) positionTableToolbar(selectedTableEl.el); });
+window.addEventListener('resize', ()=>{ if(selectedTableEl) positionTableToolbar(selectedTableEl.el); });
+
+function deleteTable(){
+  if(!selectedTableEl) return;
+  if(!confirm('Excluir esta tabela? Essa ação não pode ser desfeita.')) return;
+  const idx = selectedTableEl.topicIdx;
+  selectedTableEl.el.remove();
+  document.getElementById('tableToolbar').style.display = 'none';
+  selectedTableEl = null;
+  syncBody(idx);
+}
+
+/* ============================================================
+   ADICIONAR PÁGINA EM BRANCO
+   ============================================================ */
+// Insere um marcador invisível no fim da página selecionada. Na próxima
+// paginação, esse marcador força uma quebra ali — mesmo que ainda coubesse
+// mais texto na página — criando uma página nova e em branco logo depois,
+// pronta pra escrever.
+function addManualPageBreak(){
+  if(!selectedPageKey){
+    alert('Primeiro clique em uma página de conteúdo (à direita) — a nova página em branco entra logo depois dela.');
+    return;
+  }
+  const bodyEl = currentSelectedBodyEl();
+  if(!bodyEl) return;
+  const marker = document.createElement('div');
+  marker.className = 'manual-pagebreak';
+  marker.setAttribute('contenteditable', 'false');
+  bodyEl.appendChild(marker);
+  const idx = parseInt(selectedPageKey.split('-')[1]);
+  recombineTopicBody(idx);
+  render();
+  scheduleSave();
+  document.getElementById('saveStatus').textContent = 'Página adicionada ✓';
+}
+
+/* ============================================================
    EXPORTAR PDF
    ============================================================ */
 async function exportPDF(){
@@ -976,6 +1271,47 @@ async function exportPDF(){
   const fname = (doc.title.replace(/<[^>]+>/g,' ').trim() || 'relatorio');
   pdf.save(fname + '.pdf');
   document.getElementById('saveStatus').textContent = 'PDF exportado ✓';
+}
+
+// Exporta em PDF apenas a página de conteúdo atualmente selecionada
+// (a mesma seleção usada para inserir imagem / adicionar página em branco).
+async function exportSelectedPagePDF(){
+  if(!selectedPageKey){
+    alert('Primeiro clique em uma página de conteúdo (à direita) pra selecioná-la.');
+    return;
+  }
+  const pageEl = document.querySelector(`.content-page[data-page-key="${selectedPageKey}"]`);
+  if(!pageEl){
+    alert('A página selecionada não foi encontrada — selecione novamente.');
+    return;
+  }
+
+  document.getElementById('saveStatus').textContent = 'Gerando PDF da página, aguarde...';
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ unit:'px', format:[794,1123], compress:true });
+
+  // esconde os mesmos elementos de interface que a exportação completa esconde,
+  // pra a página sair "limpa" no PDF (sem alças de imagem, contornos, etc.)
+  document.querySelectorAll('.rh').forEach(el=> el.style.visibility='hidden');
+  document.querySelectorAll('.inline-img-wrap').forEach(el=> el.classList.remove('selected','moving'));
+  document.querySelectorAll('.content-page').forEach(el=> el.style.outline='none');
+  document.querySelectorAll('.page-limit-line').forEach(el=> el.style.display='none');
+  document.getElementById('pageDeleteBtn').style.display='none';
+  document.getElementById('imgToolbar').style.display='none';
+
+  const canvas = await html2canvas(pageEl, {scale:2, useCORS:true});
+  const imgData = canvas.toDataURL('image/jpeg', 0.92);
+  pdf.addImage(imgData, 'JPEG', 0, 0, 794, 1123);
+
+  document.querySelectorAll('.rh').forEach(el=> el.style.visibility='');
+  document.querySelectorAll('.page-limit-line').forEach(el=> el.style.display='');
+  highlightSelectedPage();
+
+  const allPages = Array.from(document.querySelectorAll('.page'));
+  const pageNumber = allPages.indexOf(pageEl) + 1;
+  const fnameSel = 'Página ' + pageNumber + ' - ' + (doc.title.replace(/<[^>]+>/g,' ').trim() || 'relatorio');
+  pdf.save(fnameSel + '.pdf');
+  document.getElementById('saveStatus').textContent = 'PDF da página exportado ✓';
 }
 
 /* ============================================================
@@ -1009,6 +1345,9 @@ function classifyBlock(el){
   if(/^H[1-6]$/.test(el.tagName)){
     const lvl = parseInt(el.tagName[1], 10);
     return { kind: lvl===1 ? 'h1' : (lvl<=3 ? 'sub' : 'normal') };
+  }
+  if(el.tagName === 'TABLE'){
+    return { kind: 'table' };
   }
   const { maxPt, bold } = inspectFormatting(el);
   const text = el.textContent.replace(/\u00a0/g,' ').trim();
@@ -1055,6 +1394,19 @@ function sanitizeElement(el){
     if(href){ n.setAttribute('href', href); n.setAttribute('target','_blank'); n.setAttribute('rel','noopener'); }
   });
   clone.removeAttribute('style'); clone.removeAttribute('class'); clone.removeAttribute('id');
+  return clone;
+}
+
+// limpa uma tabela colada do Google Docs: mantém apenas a estrutura table/tr/td,
+// convertendo negrito/itálico/sublinhado como sanitizeElement, e marca a primeira
+// linha como cabeçalho (estilo navy) para ficar legível — o Docs raramente manda
+// isso estilizado. Nunca embrulha a tabela num <p> (isso corrompe o HTML e trava
+// a paginação, porque <tr> não pode ficar dentro de <p>).
+function sanitizeTable(tableEl){
+  const clone = sanitizeElement(tableEl); // já remove estilos/classes e trata negrito/itálico
+  clone.className = 'report-table';
+  const rows = Array.from(clone.querySelectorAll('tr'));
+  if(rows.length){ rows[0].classList.add('hdr-row'); }
   return clone;
 }
 
@@ -1106,14 +1458,22 @@ function processImport(){
     }
     if(kind === 'sub'){
       const inner = sanitizeElement(el).innerHTML;
-      const html = '<p style="font-weight:800;color:var(--navy);font-size:14px;margin:16px 0 6px;">'+inner+'</p>';
+      const html = '<p style="font-weight:800;color:var(--navy);font-size:19px;margin:18px 0 8px;">'+inner+'</p>';
+      if(current) current.bodyHtml += html; else preamble.push(html);
+      return;
+    }
+    if(kind === 'table'){
+      // tabela: nunca embrulhar em <p> (quebraria o HTML) — mantém a estrutura
+      // table/tr/td intacta para que a paginação consiga quebrá-la por linha.
+      const html = sanitizeTable(el).outerHTML;
       if(current) current.bodyHtml += html; else preamble.push(html);
       return;
     }
     // parágrafo normal
     let cleanedEl = sanitizeElement(el);
     let html = cleanedEl.outerHTML;
-    if(cleanedEl.tagName !== 'P'){ html = '<p>'+cleanedEl.innerHTML+'</p>'; }
+    if(cleanedEl.tagName === 'TABLE'){ html = sanitizeTable(el).outerHTML; }
+    else if(cleanedEl.tagName !== 'P'){ html = '<p>'+cleanedEl.innerHTML+'</p>'; }
     if(current) current.bodyHtml += html; else preamble.push(html);
   });
 
@@ -1125,10 +1485,348 @@ function processImport(){
     newTopics[0].bodyHtml = preamble.join('') + newTopics[0].bodyHtml;
   }
 
+  // se um tópico termina com uma tabela, não sobra onde clicar pra continuar
+  // escrevendo depois dela — garante um parágrafo vazio no final nesse caso
+  newTopics.forEach(t=>{
+    if(t.bodyHtml.trimEnd().endsWith('</table>')){
+      t.bodyHtml = t.bodyHtml.trimEnd() + '<p><br></p>';
+    }
+  });
+
   doc.topics = newTopics;
   closeImportModal();
   render();
   scheduleSave();
+}
+
+/* ============================================================
+   GERAR TABELA A PARTIR DE TEXTO SELECIONADO
+   ============================================================ */
+let tableGenSavedRange = null;
+let tableGenTopicIndex = null;
+let tableGenBodyBindKey = null;
+let tableGenInsertMode = 'replace'; // 'replace' = troca a seleção | 'append' = adiciona no fim da página selecionada
+
+function startTableGenFromSelection(){
+  const sel = window.getSelection();
+  if(!sel || sel.rangeCount === 0 || sel.isCollapsed){
+    alert('Primeiro selecione (arraste o mouse sobre) o trecho de texto que você quer transformar em tabela, dentro do conteúdo de um tópico.');
+    return;
+  }
+  const range = sel.getRangeAt(0);
+  const startEl = range.commonAncestorContainer.nodeType === 1
+    ? range.commonAncestorContainer
+    : range.commonAncestorContainer.parentElement;
+  const bodyEl = startEl ? startEl.closest('.content-body') : null;
+  if(!bodyEl){
+    alert('Selecione o texto diretamente dentro do corpo de uma página de conteúdo (não em títulos ou fora do documento).');
+    return;
+  }
+  const text = range.toString();
+  if(!text.trim()){
+    alert('A seleção está vazia.');
+    return;
+  }
+
+  tableGenInsertMode = 'replace';
+  tableGenSavedRange = range.cloneRange();
+  tableGenBodyBindKey = bodyEl.dataset.bind;
+  const bindParts = bodyEl.dataset.bind.split('-'); // ["topic","body", i, part]
+  tableGenTopicIndex = parseInt(bindParts[2], 10);
+
+  document.getElementById('tableGenTitle').textContent = 'Criar tabela a partir do texto selecionado';
+  document.getElementById('tableGenSteps').textContent = 'Ajuste abaixo como o texto selecionado deve ser dividido em linhas e colunas. A prévia atualiza automaticamente.';
+  document.getElementById('tableGenText').value = text;
+  applyTableGenSettings(pickInitialTableGenSettings(text));
+  document.getElementById('tableGenOverlay').classList.add('open');
+  document.getElementById('tableGenText').focus();
+}
+
+// Entrada alternativa: não depende de nenhuma seleção de texto no documento.
+// Cola-se diretamente o conteúdo copiado do Excel/Sheets na caixa de texto do
+// modal (que só aceita texto puro — por isso o Ctrl+V já vem com tabulações
+// entre colunas e quebras de linha entre linhas, sem o risco de bagunçar
+// células com quebra de linha interna como acontece ao selecionar uma tabela
+// já renderizada). A tabela gerada é adicionada ao fim da página selecionada.
+function startTableGenFromPaste(){
+  if(!selectedPageKey){
+    alert('Primeiro clique em uma página de conteúdo (à direita) pra escolher onde a tabela vai entrar.');
+    return;
+  }
+  tableGenInsertMode = 'append';
+  tableGenSavedRange = null;
+  tableGenBodyBindKey = `topic-body-${selectedPageKey.split('-')[1]}-${selectedPageKey.split('-')[2]}`;
+  tableGenTopicIndex = parseInt(selectedPageKey.split('-')[1], 10);
+
+  document.getElementById('tableGenTitle').textContent = 'Colar tabela do Excel/Sheets';
+  document.getElementById('tableGenSteps').textContent = 'No Excel ou Google Sheets, selecione as células da tabela e copie (Ctrl+C). Clique na caixa abaixo e cole (Ctrl+V). A tabela é adicionada ao fim da página que você selecionou.';
+  document.getElementById('tableGenText').value = '';
+  applyTableGenSettings({ mode:'delim', delim:'\t', colCount:3 });
+  document.getElementById('tableGenOverlay').classList.add('open');
+  document.getElementById('tableGenText').focus();
+}
+
+function applyTableGenSettings(settings){
+  document.getElementById('tableGenMode').value = settings.mode;
+  document.getElementById('tableGenColCount').value = settings.colCount || 3;
+  document.getElementById('tableGenDelim').value = delimToSelectValue(settings.delim);
+  document.getElementById('tableGenCustomDelim').value = (document.getElementById('tableGenDelim').value === 'custom') ? (settings.delim||'') : '';
+  document.getElementById('tableGenHeader').checked = true;
+  updateTableGenModeUI();
+  updateTableGenDelimUI();
+}
+
+// Quando o texto muda por causa de um Ctrl+V de verdade, redetecta o melhor
+// modo/separador automaticamente (o conteúdo colado pode ser bem diferente
+// do que estava lá antes). Digitação manual só atualiza a prévia, sem
+// sobrescrever o que a pessoa já escolheu nos controles.
+function onTableGenTextInput(e){
+  if(e && e.inputType === 'insertFromPaste'){
+    applyTableGenSettings(pickInitialTableGenSettings(document.getElementById('tableGenText').value));
+  } else {
+    renderTableGenPreview();
+  }
+}
+
+function closeTableGenModal(){
+  document.getElementById('tableGenOverlay').classList.remove('open');
+}
+
+// Escolhe as configurações iniciais mais seguras pra um texto colado/selecionado:
+// se as linhas já têm tabulação (formato nativo do Excel/Sheets ao copiar),
+// usa direto o modo "separador" — é inequívoco e não depende de contar linhas.
+// Só cai no modo "X colunas por linha" quando não há tabulação nenhuma.
+function pickInitialTableGenSettings(text){
+  const lines = text.split('\n').map(l=> l.trim()).filter(l=> l !== '');
+  if(!lines.length) return { mode:'delim', delim:'\t', colCount:3 };
+  const tabCounts = lines.map(l=> l.split('\t').length);
+  const maxTab = Math.max(...tabCounts);
+  if(maxTab > 1){
+    return { mode:'delim', delim:'\t', colCount:maxTab };
+  }
+  return { mode:'fixed', delim:'\t', colCount: Math.min(4, lines.length) || 3 };
+}
+
+function updateTableGenModeUI(){
+  const mode = document.getElementById('tableGenMode').value;
+  document.getElementById('tableGenFixedRow').style.display = (mode === 'fixed') ? 'flex' : 'none';
+  document.getElementById('tableGenDelimRow').style.display = (mode === 'delim') ? 'flex' : 'none';
+  renderTableGenPreview();
+}
+
+function updateTableGenDelimUI(){
+  const isCustom = document.getElementById('tableGenDelim').value === 'custom';
+  document.getElementById('tableGenCustomDelim').style.display = isCustom ? 'inline-block' : 'none';
+  renderTableGenPreview();
+}
+
+function currentDelimiterValue(){
+  const v = document.getElementById('tableGenDelim').value;
+  switch(v){
+    case 'tab': return '\t';
+    case 'comma': return ',';
+    case 'semicolon': return ';';
+    case 'slash': return '/';
+    case 'custom': return document.getElementById('tableGenCustomDelim').value || ',';
+    default: return '\t';
+  }
+}
+
+// converte um caractere separador real (ex.: '\t') pro value simbólico usado
+// nas <option> do seletor (já que HTML não interpreta "\t" como tabulação
+// de verdade em atributos — precisa ser um código à parte)
+function delimToSelectValue(delim){
+  if(delim === '\t') return 'tab';
+  if(delim === ',') return 'comma';
+  if(delim === ';') return 'semicolon';
+  if(delim === '/') return 'slash';
+  return 'custom';
+}
+
+// Divide o texto em linhas x colunas conforme o modo escolhido.
+// Retorna um array de linhas, cada linha um array de strings (células).
+function parseTableGenRows(){
+  const raw = document.getElementById('tableGenText').value;
+  const mode = document.getElementById('tableGenMode').value;
+
+  if(mode === 'fixed'){
+    const n = Math.max(1, parseInt(document.getElementById('tableGenColCount').value, 10) || 1);
+    const cells = raw.split('\n').map(l=> l.trim()).filter(l=> l !== '');
+    const rows = [];
+    for(let i=0; i<cells.length; i+=n){
+      const row = cells.slice(i, i+n);
+      while(row.length < n) row.push(''); // completa a última linha se sobrar célula
+      rows.push(row);
+    }
+    return rows;
+  }
+
+  // modo 'delim': cada linha do texto vira uma linha da tabela
+  const delim = currentDelimiterValue();
+  const lines = raw.split('\n').map(l=> l.trim()).filter(l=> l !== '');
+  let maxCols = 1;
+  const rows = lines.map(l=>{
+    const parts = l.split(delim).map(c=> c.trim());
+    maxCols = Math.max(maxCols, parts.length);
+    return parts;
+  });
+  rows.forEach(r=>{ while(r.length < maxCols) r.push(''); });
+  return rows;
+}
+
+function buildTableGenElement(rows, markHeader){
+  const table = document.createElement('table');
+  table.className = 'report-table';
+  const tbody = document.createElement('tbody');
+  rows.forEach((row, ri)=>{
+    const tr = document.createElement('tr');
+    if(ri === 0 && markHeader) tr.classList.add('hdr-row');
+    row.forEach(cellText=>{
+      const td = document.createElement('td');
+      td.textContent = cellText;
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  return table;
+}
+
+function renderTableGenPreview(){
+  const preview = document.getElementById('tableGenPreview');
+  const rows = parseTableGenRows();
+  if(!rows.length){
+    preview.innerHTML = '<span class="empty-hint">Nada para mostrar ainda — ajuste o texto ou as opções acima.</span>';
+    return;
+  }
+  const header = document.getElementById('tableGenHeader').checked;
+  preview.innerHTML = '';
+  preview.appendChild(buildTableGenElement(rows, header));
+}
+
+// Acha o filho direto de "container" que é ancestral de "node" (ou o próprio
+// node, se ele já for filho direto). Usado pra saber em qual parágrafo/bloco
+// do content-body a seleção está, já que a tabela não pode ficar dentro de
+// um <p> (HTML inválido) — ela precisa virar um bloco irmão dele.
+function findBlockChild(node, container){
+  let n = node;
+  while(n && n.parentNode && n.parentNode !== container) n = n.parentNode;
+  return (n && n.parentNode === container) ? n : null;
+}
+
+// Garante que sempre sobre um parágrafo clicável logo depois de um bloco que
+// não recebe texto direto (tabela, imagem...). Sem isso, se esse bloco for o
+// último da página, não tem onde posicionar o cursor pra continuar
+// escrevendo abaixo dele (o clique cai "no vazio", ou — no caso de uma
+// imagem flutuante — o clique nem cai dentro da área da página).
+function ensureLandingParagraphAfter(el, bodyEl){
+  if(!el.nextSibling){
+    const p = document.createElement('p');
+    p.innerHTML = '<br>';
+    bodyEl.appendChild(p);
+  }
+}
+
+function insertGeneratedTable(){
+  const rows = parseTableGenRows();
+  if(!rows.length){
+    alert('Não há conteúdo suficiente para montar a tabela. Ajuste o texto ou as opções.');
+    return;
+  }
+  if(tableGenInsertMode === 'replace' && !tableGenSavedRange){
+    alert('A seleção original foi perdida (a página pode ter sido reorganizada). Selecione o texto novamente.');
+    return;
+  }
+  const bodyEl = document.querySelector(`[data-bind="${tableGenBodyBindKey}"]`);
+  if(!bodyEl){
+    alert('A página onde o texto estava não existe mais. Selecione o texto novamente.');
+    closeTableGenModal();
+    return;
+  }
+
+  const header = document.getElementById('tableGenHeader').checked;
+  const tableEl = buildTableGenElement(rows, header);
+
+  if(tableGenInsertMode === 'append'){
+    bodyEl.appendChild(tableEl);
+    ensureLandingParagraphAfter(tableEl, bodyEl);
+    closeTableGenModal();
+    if(tableGenTopicIndex !== null && !isNaN(tableGenTopicIndex)){
+      recombineTopicBody(tableGenTopicIndex);
+    }
+    scheduleRepagination();
+    scheduleSave();
+    return;
+  }
+
+  const range = tableGenSavedRange;
+
+  try{
+    const startBlock = findBlockChild(range.startContainer, bodyEl);
+    const endBlock = findBlockChild(range.endContainer, bodyEl);
+
+    range.deleteContents();
+
+    const isEmptyBlock = (el)=> el && !el.textContent.trim() && !el.querySelector('img');
+
+    if(startBlock && startBlock === endBlock && startBlock.parentNode === bodyEl){
+      // seleção dentro de um único parágrafo: separa o que sobrou "antes" e
+      // "depois" do ponto de corte, e coloca a tabela entre os dois blocos
+      let afterFrag = null;
+      try{
+        const r2 = document.createRange();
+        r2.setStart(range.startContainer, range.startOffset);
+        r2.setEndAfter(startBlock.lastChild || startBlock);
+        afterFrag = r2.extractContents();
+      }catch(e){ afterFrag = null; }
+
+      const parent = startBlock.parentNode;
+      parent.insertBefore(tableEl, startBlock.nextSibling);
+      if(afterFrag && afterFrag.textContent && afterFrag.textContent.trim() !== ''){
+        const afterEl = document.createElement(startBlock.tagName);
+        Array.from(startBlock.attributes).forEach(a=> afterEl.setAttribute(a.name, a.value));
+        afterEl.appendChild(afterFrag);
+        parent.insertBefore(afterEl, tableEl.nextSibling);
+      }
+      if(isEmptyBlock(startBlock)) startBlock.remove();
+
+    } else if(startBlock || endBlock){
+      // seleção atravessou mais de um bloco: ancora a tabela no lugar do
+      // bloco inicial (removendo-o se ficou vazio) e limpa o bloco final
+      // se também tiver ficado vazio
+      if(startBlock && startBlock.parentNode){
+        if(isEmptyBlock(startBlock)){
+          startBlock.parentNode.insertBefore(tableEl, startBlock);
+          startBlock.remove();
+        } else {
+          startBlock.parentNode.insertBefore(tableEl, startBlock.nextSibling);
+        }
+      } else if(endBlock && endBlock.parentNode){
+        endBlock.parentNode.insertBefore(tableEl, endBlock);
+      } else {
+        bodyEl.appendChild(tableEl);
+      }
+      if(endBlock && endBlock !== startBlock && endBlock.parentNode && isEmptyBlock(endBlock)){
+        endBlock.remove();
+      }
+    } else {
+      // fallback raro: nenhum bloco identificado
+      range.insertNode(tableEl);
+    }
+  }catch(e){
+    alert('Não foi possível inserir a tabela nessa posição. Selecione o texto novamente e tente de novo.');
+    closeTableGenModal();
+    return;
+  }
+
+  ensureLandingParagraphAfter(tableEl, bodyEl);
+  closeTableGenModal();
+  if(tableGenTopicIndex !== null && !isNaN(tableGenTopicIndex)){
+    recombineTopicBody(tableGenTopicIndex);
+  }
+  scheduleRepagination();
+  scheduleSave();
+  tableGenSavedRange = null;
 }
 
 /* ============================================================
