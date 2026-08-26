@@ -255,10 +255,18 @@
     </div>
 
     <div class="side-section">
+      <h3>Projeto (editável)</h3>
+      <p class="hint" style="margin-bottom:8px;">Salva um arquivo .json com o relatório inteiro — títulos, textos, tabelas, imagens e formatação. É o jeito de guardar o trabalho pra continuar editando depois (o PDF exportado é só uma "foto" da página, não dá pra reabrir e editar a partir dele).</p>
+      <button class="btn-primary" onclick="saveProjectFile()">💾 Salvar projeto (.json)</button>
+      <button class="btn-ghost" style="margin-top:8px;" onclick="document.getElementById('projectInput').click()">📂 Abrir projeto (.json)</button>
+      <input type="file" id="projectInput" accept=".json,application/json" style="display:none" onchange="openProjectFile(event)">
+    </div>
+
+    <div class="side-section">
       <h3>Exportar</h3>
       <button class="btn-primary" onclick="exportPDF()">⬇ Exportar PDF (documento completo)</button>
       <button class="btn-ghost" style="margin-top:8px;" onclick="exportSelectedPagePDF()">⬇ Exportar PDF (só a página selecionada)</button>
-      <p class="hint" style="margin-top:8px;">No Google Slides: <b>Arquivo → Importar slides</b>. No Canva: <b>Importar → PDF</b>.</p>
+      <p class="hint" style="margin-top:8px;">No Google Slides: <b>Arquivo → Importar slides</b>. No Canva: <b>Importar → PDF</b>. O PDF é pra visualizar/imprimir — pra continuar editando depois, use "Salvar projeto" acima.</p>
     </div>
 
     <div class="side-section" style="border-bottom:none;">
@@ -384,11 +392,28 @@ function scheduleSave(){
     }
   }, 500);
 }
+// Espera todas as imagens de um HTML terminarem de carregar/decodificar
+// antes de continuar. Sem isso, quando um documento inteiro (com várias
+// imagens, como gráficos em base64) é carregado de uma vez — ao abrir um
+// projeto salvo, por exemplo — a paginação pode rodar a medição de altura
+// antes do navegador saber o tamanho real de cada imagem, e o texto acaba
+// vazando por baixo do rodapé da página.
+function preloadImagesInHtml(html){
+  const srcs = Array.from(html.matchAll(/<img[^>]+src="([^"]+)"/g)).map(m=> m[1]);
+  if(!srcs.length) return Promise.resolve();
+  return Promise.all(srcs.map(src => new Promise(resolve=>{
+    const im = new Image();
+    im.onload = resolve; im.onerror = resolve;
+    im.src = src;
+  })));
+}
+
 async function loadDoc(){
   try{
     const res = await window.storage.get('report-doc-v2', false);
     if(res && res.value){ doc = JSON.parse(res.value); }
   }catch(e){ /* nada salvo ainda */ }
+  await preloadImagesInHtml(doc.topics.map(t=> t.bodyHtml || '').join(''));
   render();
 }
 function resetDoc(){
@@ -400,6 +425,79 @@ function resetDoc(){
     topics: [ { title:"Introdução", bodyHtml:"<p>Escreva aqui...</p>" } ]
   };
   render(); scheduleSave();
+}
+
+/* ============================================================
+   PROJETO — salvar/abrir arquivo .json (formato nativo do editor)
+   ============================================================ */
+// Salva o objeto "doc" (o mesmo dado que o autosave usa) como um arquivo
+// .json que o usuário baixa. Diferente do PDF exportado — que é uma imagem
+// "achatada" de cada página, sem texto nem estrutura por trás — esse arquivo
+// guarda o relatório inteiro no formato original do editor, então reabrir
+// ele reconstrói o documento exatamente como estava, 100% editável.
+function saveProjectFile(){
+  const payload = {
+    _tipo: 'gerador-relatorio-projeto',
+    _versao: 1,
+    doc: doc
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const fname = (doc.title || 'relatorio').replace(/<[^>]+>/g,' ').replace(/[^\w\- ]+/g,'').trim() || 'relatorio';
+  a.href = url;
+  a.download = fname + '.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=> URL.revokeObjectURL(url), 2000);
+  document.getElementById('saveStatus').textContent = 'Projeto salvo ✓';
+}
+
+// Lê um arquivo .json salvo anteriormente por "Salvar projeto" e reconstrói
+// o documento inteiro a partir dele — chega formatado exatamente como
+// estava quando foi salvo, pronto pra continuar editando.
+function openProjectFile(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async function(ev){
+    let parsed;
+    try{
+      parsed = JSON.parse(ev.target.result);
+    }catch(err){
+      alert('Esse arquivo não é um projeto válido (não é um JSON legível). Selecione o arquivo .json que foi baixado em "Salvar projeto".');
+      e.target.value = '';
+      return;
+    }
+    // aceita tanto o formato novo ({_tipo, doc:{...}}) quanto, por segurança,
+    // um JSON que já seja diretamente o objeto "doc" (title/topics soltos)
+    const candidate = (parsed && parsed.doc && parsed.doc.topics) ? parsed.doc
+                     : (parsed && parsed.topics) ? parsed
+                     : null;
+    if(!candidate || !Array.isArray(candidate.topics)){
+      alert('Esse arquivo não parece ser um projeto deste gerador de relatório (faltam os tópicos do documento). Selecione o arquivo .json correto.');
+      e.target.value = '';
+      return;
+    }
+    if(!confirm('Isso vai substituir o documento atual pelo projeto do arquivo "'+file.name+'". Continuar?')){
+      e.target.value = '';
+      return;
+    }
+    document.getElementById('saveStatus').textContent = 'Carregando imagens do projeto...';
+    doc = candidate;
+    selectedPageKey = null;
+    await preloadImagesInHtml(doc.topics.map(t=> t.bodyHtml || '').join(''));
+    render();
+    scheduleSave();
+    document.getElementById('saveStatus').textContent = 'Projeto aberto ✓';
+    e.target.value = '';
+  };
+  reader.onerror = function(){
+    alert('Não foi possível ler esse arquivo.');
+    e.target.value = '';
+  };
+  reader.readAsText(file);
 }
 
 /* ============================================================
